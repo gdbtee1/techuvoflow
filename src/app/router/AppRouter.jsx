@@ -1,5 +1,4 @@
 import {
-  BrowserRouter,
   Routes,
   Route
 } from "react-router-dom";
@@ -82,28 +81,23 @@ from "../../features/settings/pages/Settings";
 
 
 
-
-
 function ProtectedLayout({
+  children
+}) {
 
-children
+  return (
 
-}){
+    <ProtectedRoute>
 
+      <AppLayout>
 
-return (
+        {children}
 
-<ProtectedRoute>
+      </AppLayout>
 
-<AppLayout>
+    </ProtectedRoute>
 
-{children}
-
-</AppLayout>
-
-</ProtectedRoute>
-
-)
+  );
 
 }
 
@@ -111,396 +105,208 @@ return (
 
 
 
+export default function AppRouter() {
 
+  return (
 
+    <Routes>
 
 
-export default function AppRouter(){
+      {/* PUBLIC */}
 
+      <Route
+        path="/signup"
+        element={<Signup />}
+      />
 
-return (
 
-<BrowserRouter>
+      <Route
+        path="/login"
+        element={<Login />}
+      />
 
 
-<Routes>
 
 
 
+      {/* WORKSPACE SETUP */}
 
+      <Route
+        path="/onboarding"
+        element={
+          <ProtectedRoute>
+            <Onboarding />
+          </ProtectedRoute>
+        }
+      />
 
-{/* PUBLIC */}
 
 
 
-<Route
 
-path="/signup"
 
-element={<Signup/>}
+      {/* APPLICATION */}
 
-/>
+      <Route
+        path="/"
+        element={
+          <ProtectedLayout>
+            <Dashboard />
+          </ProtectedLayout>
+        }
+      />
 
 
 
-<Route
+      <Route
+        path="/crm"
+        element={
+          <ProtectedLayout>
+            <CRM />
+          </ProtectedLayout>
+        }
+      />
 
-path="/login"
 
-element={<Login/>}
 
-/>
+      <Route
+        path="/automations"
+        element={
+          <ProtectedLayout>
+            <Automations />
+          </ProtectedLayout>
+        }
+      />
 
 
 
+      <Route
+        path="/inbox"
+        element={
+          <ProtectedLayout>
+            <Inbox />
+          </ProtectedLayout>
+        }
+      />
 
 
 
+      <Route
+        path="/appointments"
+        element={
+          <ProtectedLayout>
+            <Appointments />
+          </ProtectedLayout>
+        }
+      />
 
 
-{/* WORKSPACE SETUP */}
 
+      <Route
+        path="/agents"
+        element={
+          <ProtectedLayout>
+            <Agents />
+          </ProtectedLayout>
+        }
+      />
 
 
-<Route
 
-path="/onboarding"
+      <Route
+        path="/analytics"
+        element={
+          <ProtectedLayout>
+            <Analytics />
+          </ProtectedLayout>
+        }
+      />
 
-element={
 
-<ProtectedRoute>
 
-<Onboarding/>
+      <Route
+        path="/settings"
+        element={
+          <ProtectedLayout>
+            <Settings />
+          </ProtectedLayout>
+        }
+      />
 
-</ProtectedRoute>
 
-}
 
-/>
 
 
 
 
+      {/* FUTURE READY ROUTES */}
 
 
+      <Route
+        path="/billing"
+        element={
+          <ProtectedLayout>
+            <div>
+              <h1 className="text-3xl font-bold">
+                Billing
+              </h1>
+            </div>
+          </ProtectedLayout>
+        }
+      />
 
 
 
-{/* APPLICATION */}
 
+      <Route
+        path="/team"
+        element={
+          <ProtectedLayout>
+            <div>
+              <h1 className="text-3xl font-bold">
+                Team Management
+              </h1>
+            </div>
+          </ProtectedLayout>
+        }
+      />
 
 
-<Route
 
-path="/"
 
-element={
+      <Route
+        path="/integrations"
+        element={
+          <ProtectedLayout>
+            <div>
+              <h1 className="text-3xl font-bold">
+                Integrations
+              </h1>
+            </div>
+          </ProtectedLayout>
+        }
+      />
 
-<ProtectedLayout>
 
-<Dashboard/>
 
-</ProtectedLayout>
 
-}
 
-/>
 
 
+      {/* FALLBACK */}
 
+      <Route
+        path="*"
+        element={
+          <ProtectedLayout>
+            <Dashboard />
+          </ProtectedLayout>
+        }
+      />
 
 
+    </Routes>
 
-
-
-<Route
-
-path="/crm"
-
-element={
-
-<ProtectedLayout>
-
-<CRM/>
-
-</ProtectedLayout>
-
-}
-
-/>
-
-
-
-
-
-
-
-
-<Route
-
-path="/automations"
-
-element={
-
-<ProtectedLayout>
-
-<Automations/>
-
-</ProtectedLayout>
-
-}
-
-/>
-
-
-
-
-
-
-
-
-<Route
-
-path="/inbox"
-
-element={
-
-<ProtectedLayout>
-
-<Inbox/>
-
-</ProtectedLayout>
-
-}
-
-/>
-
-
-
-
-
-
-
-
-<Route
-
-path="/appointments"
-
-element={
-
-<ProtectedLayout>
-
-<Appointments/>
-
-</ProtectedLayout>
-
-}
-
-/>
-
-
-
-
-
-
-
-
-<Route
-
-path="/agents"
-
-element={
-
-<ProtectedLayout>
-
-<Agents/>
-
-</ProtectedLayout>
-
-}
-
-/>
-
-
-
-
-
-
-
-
-<Route
-
-path="/analytics"
-
-element={
-
-<ProtectedLayout>
-
-<Analytics/>
-
-</ProtectedLayout>
-
-}
-
-/>
-
-
-
-
-
-
-
-
-<Route
-
-path="/settings"
-
-element={
-
-<ProtectedLayout>
-
-<Settings/>
-
-</ProtectedLayout>
-
-}
-
-/>
-
-
-
-
-
-
-
-
-
-{/* FUTURE READY ROUTES */}
-
-
-
-<Route
-
-path="/billing"
-
-element={
-
-<ProtectedLayout>
-
-<div>
-
-<h1 className="text-3xl font-bold">
-
-Billing
-
-</h1>
-
-</div>
-
-</ProtectedLayout>
-
-}
-
-/>
-
-
-
-
-
-
-
-<Route
-
-path="/team"
-
-element={
-
-<ProtectedLayout>
-
-<div>
-
-<h1 className="text-3xl font-bold">
-
-Team Management
-
-</h1>
-
-</div>
-
-</ProtectedLayout>
-
-}
-
-/>
-
-
-
-
-
-
-
-
-<Route
-
-path="/integrations"
-
-element={
-
-<ProtectedLayout>
-
-<div>
-
-<h1 className="text-3xl font-bold">
-
-Integrations
-
-</h1>
-
-</div>
-
-</ProtectedLayout>
-
-}
-
-/>
-
-
-
-
-
-
-
-
-
-{/* FALLBACK */}
-
-
-
-<Route
-
-path="*"
-
-element={
-
-<ProtectedLayout>
-
-<Dashboard/>
-
-</ProtectedLayout>
-
-}
-
-/>
-
-
-
-
-
-</Routes>
-
-
-</BrowserRouter>
-
-)
+  );
 
 }
