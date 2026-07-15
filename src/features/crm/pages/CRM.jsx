@@ -123,7 +123,6 @@ setError
 
 
 
-
 async function loadLeads(){
 
 
@@ -164,7 +163,6 @@ err.message
 
 
 
-
 useEffect(()=>{
 
 
@@ -172,8 +170,6 @@ loadLeads();
 
 
 },[workspace]);
-
-
 
 
 
@@ -194,8 +190,6 @@ setForm({
 
 
 }
-
-
 
 
 
@@ -224,12 +218,11 @@ x=>x!==id
 id
 ]
 
+
 );
 
 
 }
-
-
 
 
 
@@ -282,8 +275,6 @@ loadLeads();
 
 
 
-
-
 async function addLead(){
 
 
@@ -325,7 +316,6 @@ stage:"new",
 source:"manual"
 
 });
-
 
 
 
@@ -397,8 +387,6 @@ setLoading(false);
 
 
 }
-
-
 
 
 
@@ -515,7 +503,6 @@ new Date(a.created_at)
 
 
 
-
 const pipelineValue =
 
 leads.reduce(
@@ -538,13 +525,13 @@ total+
 
 
 
-
 if(workspaceLoading){
 
 return (
 
 <div className="
-p-6
+p-4
+sm:p-6
 ">
 
 Loading CRM...
@@ -561,15 +548,18 @@ Loading CRM...
 
 
 
-
-
 return (
 
 <section className="
 w-full
 max-w-full
-overflow-hidden
-space-y-8
+min-w-0
+overflow-x-hidden
+px-3
+sm:px-4
+md:px-6
+space-y-6
+sm:space-y-8
 ">
 
 
@@ -578,7 +568,9 @@ space-y-8
 
 
 
-<div>
+<div className="
+min-w-0
+">
 
 
 <div className="
@@ -591,11 +583,15 @@ gap-4
 ">
 
 
-<div>
+<div className="
+min-w-0
+">
 
 <h1 className="
-text-3xl
+text-2xl
+sm:text-3xl
 font-bold
+break-words
 ">
 
 CRM
@@ -605,6 +601,7 @@ CRM
 
 <p className="
 text-slate-500
+break-words
 ">
 
 Manage your sales pipeline.
@@ -623,7 +620,10 @@ bg-slate-100
 rounded-xl
 px-5
 py-3
-w-fit
+w-full
+sm:w-fit
+text-center
+shrink-0
 ">
 
 {leads.length} Leads
@@ -639,13 +639,13 @@ w-fit
 
 
 
-
 <div className="
 grid
 grid-cols-1
 sm:grid-cols-3
 gap-4
 mt-6
+min-w-0
 ">
 
 
@@ -653,8 +653,10 @@ mt-6
 <div className="
 bg-white
 rounded-2xl
-p-5
+p-4
+sm:p-5
 shadow
+min-w-0
 ">
 
 <p>
@@ -665,6 +667,7 @@ Pipeline
 <h2 className="
 text-xl
 font-bold
+break-words
 ">
 
 ${pipelineValue}
@@ -681,8 +684,10 @@ ${pipelineValue}
 <div className="
 bg-white
 rounded-2xl
-p-5
+p-4
+sm:p-5
 shadow
+min-w-0
 ">
 
 <p>
@@ -713,8 +718,10 @@ l=>l.stage==="new"
 <div className="
 bg-white
 rounded-2xl
-p-5
+p-4
+sm:p-5
 shadow
+min-w-0
 ">
 
 <p>
@@ -752,8 +759,6 @@ l=>l.stage==="won"
 
 
 
-
-
 {
 error && (
 
@@ -762,6 +767,9 @@ bg-red-50
 text-red-600
 rounded-xl
 p-4
+w-full
+min-w-0
+break-words
 ">
 
 {error}
@@ -778,14 +786,15 @@ p-4
 
 
 
-
-
 <div className="
 bg-white
 rounded-2xl
-p-5
+p-4
+sm:p-5
 shadow
 space-y-4
+w-full
+min-w-0
 ">
 
 
@@ -806,6 +815,8 @@ grid
 grid-cols-1
 md:grid-cols-2
 gap-3
+w-full
+min-w-0
 ">
 
 
@@ -837,6 +848,10 @@ border
 rounded-xl
 p-3
 h-28
+w-full
+min-w-0
+max-w-full
+resize-y
 "
 
 />
@@ -861,6 +876,9 @@ className="
 border
 rounded-xl
 p-3
+w-full
+min-w-0
+max-w-full
 "
 
 />
@@ -889,6 +907,8 @@ text-white
 rounded-xl
 px-5
 py-3
+w-full
+sm:w-auto
 "
 
 >
@@ -918,14 +938,15 @@ loading
 
 
 
-
-
 <div className="
 bg-white
 rounded-2xl
-p-5
+p-4
+sm:p-5
 shadow
 space-y-4
+w-full
+min-w-0
 ">
 
 
@@ -945,6 +966,8 @@ border
 rounded-xl
 p-3
 w-full
+min-w-0
+max-w-full
 "
 
 />
@@ -955,8 +978,12 @@ w-full
 
 <div className="
 flex
-flex-wrap
+flex-col
+sm:flex-row
+sm:flex-wrap
 gap-3
+w-full
+min-w-0
 ">
 
 
@@ -972,6 +999,9 @@ className="
 border
 rounded-xl
 p-3
+w-full
+sm:w-auto
+min-w-0
 "
 
 >
@@ -1023,6 +1053,9 @@ className="
 border
 rounded-xl
 p-3
+w-full
+sm:w-auto
+min-w-0
 "
 
 >
@@ -1058,7 +1091,6 @@ Highest Value
 
 
 
-
 {
 
 selectedLeads.length>0 && (
@@ -1073,6 +1105,9 @@ text-white
 rounded-xl
 px-5
 py-3
+w-full
+sm:w-auto
+max-w-full
 "
 
 >
@@ -1091,11 +1126,13 @@ Delete Selected ({selectedLeads.length})
 
 
 
-
-
 <div className="
 w-full
-overflow-hidden
+max-w-full
+min-w-0
+overflow-x-auto
+overscroll-x-contain
+[-webkit-overflow-scrolling:touch]
 ">
 
 <Pipeline
@@ -1120,14 +1157,11 @@ toggleLeadSelection={toggleLeadSelection}
 
 
 
-
-
 <TaskPanel
 
 organizationId={workspace.id}
 
 />
-
 
 
 
