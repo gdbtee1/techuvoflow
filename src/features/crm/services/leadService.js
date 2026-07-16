@@ -1,4 +1,4 @@
-import {supabase} from "../../../lib/supabase";
+import { supabase } from "../../../lib/supabase";
 
 
 
@@ -186,6 +186,7 @@ stage
 ){
 
 const {
+data,
 error
 
 }=await supabase
@@ -194,23 +195,52 @@ error
 
 .update({
 
-stage
+stage,
+
+status:stage
 
 })
 
 .eq(
 "id",
 leadId
-);
+)
+
+.select()
+
+.single();
 
 
 
 if(error){
 
+console.error(
+"Lead stage update failed:",
+error
+);
+
 throw error;
 
 }
 
+
+
+if(!data){
+
+throw new Error(
+"No lead was updated."
+);
+
+}
+
+
+
+console.log(
+"Lead updated:",
+data
+);
+
+return data;
 
 }
 

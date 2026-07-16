@@ -1,7 +1,13 @@
 import {
 DndContext,
 closestCorners,
-DragOverlay
+pointerWithin,
+DragOverlay,
+MeasuringStrategy,
+PointerSensor,
+TouchSensor,
+useSensor,
+useSensors
 } from "@dnd-kit/core";
 
 
@@ -12,6 +18,7 @@ useDraggable
 
 
 import {
+useMemo,
 useState
 } from "react";
 
@@ -35,32 +42,38 @@ const stages=[
 
 {
 id:"new",
-name:"New Lead"
+name:"New Lead",
+shortName:"New"
 },
 
 {
 id:"contacted",
-name:"Contacted"
+name:"Contacted",
+shortName:"Contacted"
 },
 
 {
 id:"qualified",
-name:"Qualified"
+name:"Qualified",
+shortName:"Qualified"
 },
 
 {
 id:"proposal",
-name:"Proposal"
+name:"Proposal",
+shortName:"Proposal"
 },
 
 {
 id:"won",
-name:"Won"
+name:"Won",
+shortName:"Won"
 },
 
 {
 id:"lost",
-name:"Lost"
+name:"Lost",
+shortName:"Lost"
 }
 
 ];
@@ -94,7 +107,9 @@ listeners,
 
 setNodeRef,
 
-transform
+transform,
+
+isDragging
 
 }=useDraggable({
 
@@ -106,11 +121,9 @@ id:lead.id
 
 return (
 
-<div
+<article
 
 ref={setNodeRef}
-
-{...attributes}
 
 style={{
 
@@ -118,7 +131,7 @@ transform: transform
 
 ?
 
-`translate(${transform.x}px, ${transform.y}px)`
+`translate3d(${transform.x}px, ${transform.y}px, 0)`
 
 :
 
@@ -127,16 +140,24 @@ undefined
 }}
 
 className={`
-bg-white
-rounded-xl
-p-4
-mb-3
-shadow-sm
+group
+relative
+w-full
+min-w-0
+rounded-2xl
 border
-transition
+border-slate-200
+bg-white
+p-3
+sm:p-4
+shadow-sm
+transition-all
+duration-200
+hover:-translate-y-0.5
+hover:border-slate-300
 hover:shadow-md
 
-${dragging ? "opacity-50" : ""}
+${dragging || isDragging ? "opacity-40" : ""}
 `}
 
 >
@@ -147,6 +168,7 @@ ${dragging ? "opacity-50" : ""}
 flex
 items-start
 gap-3
+min-w-0
 ">
 
 
@@ -158,11 +180,15 @@ checked={selected}
 
 onChange={()=>toggleSelect(lead.id)}
 
+onClick={event=>event.stopPropagation()}
+
 className="
+mt-1
 h-4
 w-4
-mt-1
+shrink-0
 cursor-pointer
+accent-black
 "
 
 />
@@ -170,21 +196,51 @@ cursor-pointer
 
 
 
-<div
+<div className="
+min-w-0
+flex-1
+">
+
+
+<button
+
+type="button"
+
+{...attributes}
 
 {...listeners}
 
 className="
-flex-1
+block
+w-full
+min-w-0
 cursor-grab
+touch-none
+text-left
+active:cursor-grabbing
 "
 
 >
 
 
+<div className="
+flex
+items-start
+justify-between
+gap-2
+min-w-0
+">
+
+
+<div className="
+min-w-0
+">
+
+
 <h3 className="
-font-semibold
 truncate
+font-semibold
+text-slate-900
 ">
 
 {lead.name}
@@ -193,9 +249,10 @@ truncate
 
 
 <p className="
+mt-1
+truncate
 text-sm
 text-slate-500
-truncate
 ">
 
 {lead.email || "No email"}
@@ -203,17 +260,78 @@ truncate
 </p>
 
 
+</div>
+
+
+<span className="
+shrink-0
+rounded-lg
+bg-slate-100
+px-2
+py-1
+text-[10px]
+font-semibold
+uppercase
+tracking-wide
+text-slate-500
+">
+
+Drag
+
+</span>
+
+
+</div>
+
+
+</button>
+
+
+
 <div className="
 mt-3
-text-xs
-bg-slate-100
+flex
+items-center
+justify-between
+gap-2
+">
+
+
+<span className="
+min-w-0
+truncate
 rounded-full
+bg-slate-100
 px-3
 py-1
-inline-block
+text-xs
+text-slate-600
 ">
 
 {lead.source || "Manual"}
+
+</span>
+
+
+{
+
+Number(lead.value)>0 && (
+
+<span className="
+shrink-0
+text-sm
+font-semibold
+text-slate-800
+">
+
+${Number(lead.value).toLocaleString()}
+
+</span>
+
+)
+
+}
+
 
 </div>
 
@@ -229,13 +347,24 @@ inline-block
 
 <button
 
+type="button"
+
 onClick={onClick}
 
 className="
 mt-4
+w-full
+rounded-xl
+border
+border-slate-200
+px-3
+py-2
 text-sm
-text-blue-600
-hover:underline
+font-medium
+text-slate-700
+transition
+hover:border-slate-300
+hover:bg-slate-50
 "
 
 >
@@ -246,7 +375,7 @@ View Details
 
 
 
-</div>
+</article>
 
 )
 
@@ -270,20 +399,38 @@ onSelectLead,
 
 selectedLeads,
 
-toggleLeadSelection
+toggleLeadSelection,
+
+droppableId,
+
+compact=false
 
 }){
 
 
 const {
 
-setNodeRef
+setNodeRef,
+
+isOver
 
 }=useDroppable({
 
-id:stage.id
+id:droppableId || `column:${stage.id}`
 
 });
+
+
+
+const stageValue = leads.reduce(
+
+(total,lead)=>
+
+total+(Number(lead.value)||0),
+
+0
+
+);
 
 
 
@@ -293,29 +440,49 @@ return (
 
 ref={setNodeRef}
 
-className="
-bg-slate-100
+className={`
+flex
+min-w-0
+flex-col
 rounded-2xl
-p-4
-min-h-[420px]
-w-[280px]
-flex-shrink-0
-"
+border
+p-3
+sm:p-4
+transition-all
+duration-200
+
+${compact ? "min-h-[390px]" : "min-h-[440px]"}
+
+${isOver
+?
+"border-slate-900 bg-slate-200 shadow-lg"
+:
+"border-slate-200 bg-slate-100"
+}
+`}
 
 
 >
 
 
 <div className="
-flex
-justify-between
-items-center
 mb-4
+flex
+items-start
+justify-between
+gap-3
+">
+
+
+<div className="
+min-w-0
 ">
 
 
 <h2 className="
+truncate
 font-semibold
+text-slate-900
 ">
 
 {stage.name}
@@ -323,9 +490,34 @@ font-semibold
 </h2>
 
 
-<span className="
-text-sm
+<p className="
+mt-1
+text-xs
 text-slate-500
+">
+
+${stageValue.toLocaleString()}
+
+</p>
+
+
+</div>
+
+
+<span className="
+flex
+h-7
+min-w-7
+shrink-0
+items-center
+justify-center
+rounded-full
+bg-white
+px-2
+text-xs
+font-semibold
+text-slate-700
+shadow-sm
 ">
 
 {leads.length}
@@ -338,20 +530,43 @@ text-slate-500
 
 
 
+<div className="
+flex
+min-h-0
+flex-1
+flex-col
+gap-3
+">
+
+
 {
 
 leads.length===0
 
 ?
 
-<div className="
+<div className={`
+flex
+flex-1
+items-center
+justify-center
+rounded-xl
+border
+border-dashed
+px-4
 text-center
 text-sm
-text-slate-400
-py-10
-">
+transition
 
-Drop leads here
+${isOver
+?
+"border-slate-900 bg-white text-slate-900"
+:
+"border-slate-300 text-slate-400"
+}
+`}>
+
+{isOver ? "Release to move lead" : "Drop leads here"}
 
 </div>
 
@@ -387,7 +602,86 @@ onClick={()=>onSelectLead(lead)}
 }
 
 
+</div>
+
+
 </section>
+
+)
+
+}
+
+
+
+
+
+
+
+
+
+function MobileStageTarget({
+
+stage,
+
+activeStage
+
+}){
+
+
+const {
+
+setNodeRef,
+
+isOver
+
+}=useDroppable({
+
+id:`mobile-target:${stage.id}`
+
+});
+
+
+
+const isCurrent = stage.id===activeStage;
+
+
+
+return (
+
+<div
+
+ref={setNodeRef}
+
+className={`
+flex
+min-h-20
+items-center
+justify-center
+rounded-2xl
+border-2
+px-3
+text-center
+text-sm
+font-semibold
+transition-all
+
+${isCurrent
+?
+"border-slate-300 bg-slate-100 text-slate-400"
+:
+isOver
+?
+"scale-[1.03] border-black bg-black text-white shadow-xl"
+:
+"border-dashed border-slate-300 bg-white text-slate-700"
+}
+`}
+
+>
+
+{isCurrent ? "Current stage" : `Move to ${stage.shortName}`}
+
+</div>
 
 )
 
@@ -436,6 +730,108 @@ setSelectedLead
 
 
 
+const [
+
+mobileStage,
+
+setMobileStage
+
+]=useState("new");
+
+
+
+const [
+
+optimisticStages,
+
+setOptimisticStages
+
+]=useState({});
+
+
+
+const sensors = useSensors(
+
+useSensor(PointerSensor,{
+
+activationConstraint:{
+
+distance:8
+
+}
+
+}),
+
+useSensor(TouchSensor,{
+
+activationConstraint:{
+
+delay:180,
+
+tolerance:8
+
+}
+
+})
+
+);
+
+
+
+const leadsByStage = useMemo(()=>{
+
+
+return stages.reduce((groups,stage)=>{
+
+
+groups[stage.id]=leads.filter(
+
+lead=>(optimisticStages[lead.id] || lead.stage)===stage.id
+
+);
+
+
+return groups;
+
+
+},{});
+
+
+},[leads,optimisticStages]);
+
+
+
+const visibleMobileLeads =
+
+leadsByStage[mobileStage] || [];
+
+
+
+
+
+
+
+function collisionStrategy(args){
+
+
+const pointerHits = pointerWithin(args);
+
+
+if(pointerHits.length){
+
+return pointerHits;
+
+}
+
+
+return closestCorners(args);
+
+
+}
+
+
+
+
 
 
 
@@ -450,7 +846,7 @@ item=>item.id===event.active.id
 );
 
 
-setActiveLead(lead);
+setActiveLead(lead || null);
 
 
 }
@@ -497,7 +893,17 @@ if(!lead)return;
 
 const oldStage = lead.stage;
 
-const newStage = over.id;
+const rawDropId = String(over.id);
+
+const newStage = rawDropId.includes(":")
+
+?
+
+rawDropId.split(":").pop()
+
+:
+
+rawDropId;
 
 
 
@@ -505,6 +911,23 @@ if(oldStage===newStage)return;
 
 
 
+if(!stages.some(stage=>stage.id===newStage)){
+
+return;
+
+}
+
+
+
+
+
+setOptimisticStages(prev=>({
+
+...prev,
+
+[lead.id]:newStage
+
+}));
 
 
 try{
@@ -536,11 +959,37 @@ description:
 
 
 
-onMove();
+setMobileStage(newStage);
+
+
+
+await onMove();
+
+
+setOptimisticStages(prev=>{
+
+const next={...prev};
+
+delete next[lead.id];
+
+return next;
+
+});
 
 
 
 }catch(err){
+
+setOptimisticStages(prev=>{
+
+const next={...prev};
+
+delete next[lead.id];
+
+return next;
+
+});
+
 
 console.error(
 "Pipeline update failed:",
@@ -566,9 +1015,23 @@ return (
 
 <DndContext
 
-collisionDetection={closestCorners}
+sensors={sensors}
+
+collisionDetection={collisionStrategy}
+
+measuring={{
+
+droppable:{
+
+strategy:MeasuringStrategy.Always
+
+}
+
+}}
 
 onDragStart={handleDragStart}
+
+onDragCancel={()=>setActiveLead(null)}
 
 onDragEnd={handleDragEnd}
 
@@ -576,10 +1039,14 @@ onDragEnd={handleDragEnd}
 
 
 <div className="
-flex
-gap-4
-overflow-x-auto
-pb-4
+hidden
+w-full
+min-w-0
+grid-cols-2
+gap-3
+md:grid
+lg:grid-cols-3
+xl:grid-cols-6
 ">
 
 
@@ -594,21 +1061,17 @@ key={stage.id}
 
 stage={stage}
 
-leads={
-
-leads.filter(
-
-lead=>lead.stage===stage.id
-
-)
-
-}
+leads={leadsByStage[stage.id] || []}
 
 onSelectLead={setSelectedLead}
 
 selectedLeads={selectedLeads}
 
 toggleLeadSelection={toggleLeadSelection}
+
+droppableId={`desktop-column:${stage.id}`}
+
+compact
 
 />
 
@@ -625,12 +1088,260 @@ toggleLeadSelection={toggleLeadSelection}
 
 
 
-<DragOverlay>
+<div className="
+w-full
+min-w-0
+md:hidden
+">
+
+
+<div className="
+mb-4
+rounded-2xl
+border
+border-slate-200
+bg-white
+p-2
+shadow-sm
+">
+
+
+<div className="
+grid
+grid-cols-3
+gap-2
+">
+
+
+{
+
+stages.map(stage=>(
+
+
+<button
+
+key={stage.id}
+
+type="button"
+
+onClick={()=>setMobileStage(stage.id)}
+
+className={`
+min-w-0
+rounded-xl
+px-2
+py-2.5
+text-xs
+font-semibold
+transition
+
+${mobileStage===stage.id
+?
+"bg-black text-white shadow-md"
+:
+"bg-slate-100 text-slate-600"
+}
+`}
+
+>
+
+
+<span className="
+block
+truncate
+">
+
+{stage.shortName}
+
+</span>
+
+
+<span className="
+mt-1
+block
+text-[10px]
+opacity-70
+">
+
+{(leadsByStage[stage.id] || []).length} leads
+
+</span>
+
+
+</button>
+
+
+))
+
+
+}
+
+
+</div>
+
+
+</div>
+
+
+
+
+<Column
+
+stage={
+
+stages.find(stage=>stage.id===mobileStage)
+
+}
+
+leads={visibleMobileLeads}
+
+onSelectLead={setSelectedLead}
+
+selectedLeads={selectedLeads}
+
+toggleLeadSelection={toggleLeadSelection}
+
+droppableId={`mobile-column:${mobileStage}`}
+
+/>
+
+
+
+
+<div className={`
+fixed
+inset-x-3
+bottom-3
+z-50
+rounded-3xl
+border
+border-slate-200
+bg-white/95
+p-3
+shadow-2xl
+backdrop-blur
+transition-all
+duration-200
+
+${activeLead
+?
+"translate-y-0 opacity-100 pointer-events-auto"
+:
+"translate-y-[120%] opacity-0 pointer-events-none"
+}
+`}>
+
+
+<div className="
+mb-3
+flex
+items-center
+justify-between
+gap-3
+px-1
+">
+
+
+<div>
+
+
+<p className="
+text-sm
+font-semibold
+text-slate-900
+">
+
+{activeLead ? `Move ${activeLead.name}` : "Move lead"}
+
+</p>
+
+
+<p className="
+text-xs
+text-slate-500
+">
+
+Drop onto a destination
+
+</p>
+
+
+</div>
+
+
+<span className="
+rounded-full
+bg-slate-100
+px-3
+py-1
+text-xs
+font-medium
+text-slate-600
+">
+
+Release to move
+
+</span>
+
+
+</div>
+
+
+<div className="
+grid
+grid-cols-2
+gap-2
+">
+
+
+{
+
+stages.map(stage=>(
+
+
+<MobileStageTarget
+
+key={stage.id}
+
+stage={stage}
+
+activeStage={activeLead?.stage}
+
+/>
+
+
+))
+
+
+}
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+<DragOverlay
+
+dropAnimation={null}
+
+>
 
 
 {
 
 activeLead && (
+
+<div className="
+w-[min(88vw,320px)]
+">
 
 <LeadCard
 
@@ -643,6 +1354,8 @@ selected={false}
 toggleSelect={()=>{}}
 
 />
+
+</div>
 
 )
 

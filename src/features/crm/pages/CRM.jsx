@@ -35,6 +35,42 @@ from "../../tasks/components/TaskPanel";
 
 
 
+const stageSummary=[
+
+{
+id:"new",
+label:"New"
+},
+
+{
+id:"contacted",
+label:"Contacted"
+},
+
+{
+id:"qualified",
+label:"Qualified"
+},
+
+{
+id:"proposal",
+label:"Proposal"
+},
+
+{
+id:"won",
+label:"Won"
+},
+
+{
+id:"lost",
+label:"Lost"
+}
+
+];
+
+
+
 export default function CRM(){
 
 
@@ -557,7 +593,7 @@ min-w-0
 overflow-x-hidden
 px-3
 sm:px-4
-md:px-6
+lg:px-6
 space-y-6
 sm:space-y-8
 ">
@@ -616,14 +652,17 @@ Manage your sales pipeline.
 
 
 <div className="
-bg-slate-100
-rounded-xl
+bg-slate-900
+text-white
+rounded-2xl
 px-5
 py-3
 w-full
 sm:w-fit
 text-center
 shrink-0
+font-medium
+shadow-sm
 ">
 
 {leads.length} Leads
@@ -641,104 +680,96 @@ shrink-0
 
 <div className="
 grid
-grid-cols-1
-sm:grid-cols-3
-gap-4
+grid-cols-2
+md:grid-cols-3
+xl:grid-cols-6
+gap-3
+sm:gap-4
 mt-6
 min-w-0
 ">
 
 
-
-<div className="
-bg-white
-rounded-2xl
-p-4
-sm:p-5
-shadow
-min-w-0
-">
-
-<p>
-Pipeline
-</p>
-
-
-<h2 className="
-text-xl
-font-bold
-break-words
-">
-
-${pipelineValue}
-
-</h2>
-
-
-</div>
-
-
-
-
-
-<div className="
-bg-white
-rounded-2xl
-p-4
-sm:p-5
-shadow
-min-w-0
-">
-
-<p>
-New Leads
-</p>
-
-
-<h2 className="
-text-xl
-font-bold
-">
-
 {
-leads.filter(
-l=>l.stage==="new"
-).length
-}
 
-</h2>
+stageSummary.map(stage=>{
 
 
-</div>
+const stageLeads = leads.filter(
+
+lead=>lead.stage===stage.id
+
+);
 
 
+const stageValue = stageLeads.reduce(
 
+(total,lead)=>
+
+total+(Number(lead.value)||0),
+
+0
+
+);
+
+
+return (
+
+<div
+
+key={stage.id}
+
+className="
+bg-white
+rounded-2xl
+border
+border-slate-200
+p-4
+sm:p-5
+shadow-sm
+min-w-0
+transition
+hover:-translate-y-0.5
+hover:shadow-md
+"
+
+
+>
 
 
 <div className="
-bg-white
-rounded-2xl
-p-4
-sm:p-5
-shadow
+flex
+items-start
+justify-between
+gap-3
+">
+
+
+<div className="
 min-w-0
 ">
 
-<p>
-Won
+
+<p className="
+text-sm
+font-medium
+text-slate-500
+truncate
+">
+
+{stage.label}
+
 </p>
 
 
 <h2 className="
-text-xl
+mt-1
+text-2xl
 font-bold
+text-slate-900
 ">
 
-{
-leads.filter(
-l=>l.stage==="won"
-).length
-}
+{stageLeads.length}
 
 </h2>
 
@@ -746,6 +777,49 @@ l=>l.stage==="won"
 </div>
 
 
+<span className="
+flex
+h-9
+min-w-9
+items-center
+justify-center
+rounded-full
+bg-slate-100
+px-2
+text-xs
+font-semibold
+text-slate-700
+">
+
+{stageLeads.length}
+
+</span>
+
+
+</div>
+
+
+<p className="
+mt-3
+truncate
+text-xs
+font-medium
+text-slate-500
+">
+
+${stageValue.toLocaleString()} value
+
+</p>
+
+
+</div>
+
+);
+
+
+})
+
+}
 
 
 </div>
@@ -788,10 +862,12 @@ break-words
 
 <div className="
 bg-white
-rounded-2xl
+rounded-3xl
+border
+border-slate-200
 p-4
 sm:p-5
-shadow
+shadow-sm
 space-y-4
 w-full
 min-w-0
@@ -813,7 +889,7 @@ Add Lead
 <div className="
 grid
 grid-cols-1
-md:grid-cols-2
+lg:grid-cols-2
 gap-3
 w-full
 min-w-0
@@ -845,6 +921,7 @@ placeholder={field}
 
 className="
 border
+border-slate-200
 rounded-xl
 p-3
 h-28
@@ -852,6 +929,11 @@ w-full
 min-w-0
 max-w-full
 resize-y
+outline-none
+transition
+focus:border-slate-400
+focus:ring-2
+focus:ring-slate-200
 "
 
 />
@@ -874,11 +956,17 @@ placeholder={field}
 
 className="
 border
+border-slate-200
 rounded-xl
 p-3
 w-full
 min-w-0
 max-w-full
+outline-none
+transition
+focus:border-slate-400
+focus:ring-2
+focus:ring-slate-200
 "
 
 />
@@ -901,6 +989,8 @@ max-w-full
 
 onClick={addLead}
 
+disabled={loading}
+
 className="
 bg-black
 text-white
@@ -909,6 +999,12 @@ px-5
 py-3
 w-full
 sm:w-auto
+font-medium
+transition
+hover:bg-slate-800
+active:scale-[0.99]
+disabled:cursor-not-allowed
+disabled:opacity-60
 "
 
 >
@@ -940,10 +1036,12 @@ loading
 
 <div className="
 bg-white
-rounded-2xl
+rounded-3xl
+border
+border-slate-200
 p-4
 sm:p-5
-shadow
+shadow-sm
 space-y-4
 w-full
 min-w-0
@@ -963,11 +1061,17 @@ e=>setSearch(e.target.value)
 
 className="
 border
+border-slate-200
 rounded-xl
 p-3
 w-full
 min-w-0
 max-w-full
+outline-none
+transition
+focus:border-slate-400
+focus:ring-2
+focus:ring-slate-200
 "
 
 />
@@ -997,11 +1101,18 @@ e=>setStageFilter(e.target.value)
 
 className="
 border
+border-slate-200
 rounded-xl
 p-3
 w-full
 sm:w-auto
 min-w-0
+bg-white
+outline-none
+transition
+focus:border-slate-400
+focus:ring-2
+focus:ring-slate-200
 "
 
 >
@@ -1051,11 +1162,18 @@ e=>setSort(e.target.value)
 
 className="
 border
+border-slate-200
 rounded-xl
 p-3
 w-full
 sm:w-auto
 min-w-0
+bg-white
+outline-none
+transition
+focus:border-slate-400
+focus:ring-2
+focus:ring-slate-200
 "
 
 >
@@ -1130,9 +1248,7 @@ Delete Selected ({selectedLeads.length})
 w-full
 max-w-full
 min-w-0
-overflow-x-auto
-overscroll-x-contain
-[-webkit-overflow-scrolling:touch]
+overflow-visible
 ">
 
 <Pipeline
@@ -1157,11 +1273,15 @@ toggleLeadSelection={toggleLeadSelection}
 
 
 
+{workspace?.id && (
+
 <TaskPanel
 
 organizationId={workspace.id}
 
 />
+
+)}
 
 
 
