@@ -36,6 +36,9 @@ from "../../features/workspace/components/Onboarding";
 import Dashboard
 from "../../pages/Dashboard";
 
+import Billing
+from "../../pages/Billing";
+
 
 // CRM
 
@@ -80,37 +83,19 @@ from "../../features/settings/pages/Settings";
 
 
 
-
-function ProtectedLayout({
-  children
-}) {
-
+function ProtectedLayout({ children }) {
   return (
-
     <ProtectedRoute>
-
       <AppLayout>
-
         {children}
-
       </AppLayout>
-
     </ProtectedRoute>
-
   );
-
 }
 
-
-
-
-
 export default function AppRouter() {
-
   return (
-
     <Routes>
-
 
       {/* PUBLIC */}
 
@@ -119,17 +104,12 @@ export default function AppRouter() {
         element={<Signup />}
       />
 
-
       <Route
         path="/login"
         element={<Login />}
       />
 
-
-
-
-
-      {/* WORKSPACE SETUP */}
+      {/* WORKSPACE */}
 
       <Route
         path="/onboarding"
@@ -140,10 +120,16 @@ export default function AppRouter() {
         }
       />
 
+      {/* BILLING (FULL PAGE - NO SIDEBAR) */}
 
-
-
-
+      <Route
+        path="/billing"
+        element={
+          <ProtectedRoute>
+            <Billing />
+          </ProtectedRoute>
+        }
+      />
 
       {/* APPLICATION */}
 
@@ -156,8 +142,6 @@ export default function AppRouter() {
         }
       />
 
-
-
       <Route
         path="/crm"
         element={
@@ -166,8 +150,6 @@ export default function AppRouter() {
           </ProtectedLayout>
         }
       />
-
-
 
       <Route
         path="/automations"
@@ -178,8 +160,6 @@ export default function AppRouter() {
         }
       />
 
-
-
       <Route
         path="/inbox"
         element={
@@ -188,8 +168,6 @@ export default function AppRouter() {
           </ProtectedLayout>
         }
       />
-
-
 
       <Route
         path="/appointments"
@@ -200,8 +178,6 @@ export default function AppRouter() {
         }
       />
 
-
-
       <Route
         path="/agents"
         element={
@@ -210,8 +186,6 @@ export default function AppRouter() {
           </ProtectedLayout>
         }
       />
-
-
 
       <Route
         path="/analytics"
@@ -222,8 +196,6 @@ export default function AppRouter() {
         }
       />
 
-
-
       <Route
         path="/settings"
         element={
@@ -233,30 +205,7 @@ export default function AppRouter() {
         }
       />
 
-
-
-
-
-
-
-      {/* FUTURE READY ROUTES */}
-
-
-      <Route
-        path="/billing"
-        element={
-          <ProtectedLayout>
-            <div>
-              <h1 className="text-3xl font-bold">
-                Billing
-              </h1>
-            </div>
-          </ProtectedLayout>
-        }
-      />
-
-
-
+      {/* FUTURE */}
 
       <Route
         path="/team"
@@ -271,9 +220,6 @@ export default function AppRouter() {
         }
       />
 
-
-
-
       <Route
         path="/integrations"
         element={
@@ -287,12 +233,6 @@ export default function AppRouter() {
         }
       />
 
-
-
-
-
-
-
       {/* FALLBACK */}
 
       <Route
@@ -304,9 +244,6 @@ export default function AppRouter() {
         }
       />
 
-
     </Routes>
-
   );
-
 }

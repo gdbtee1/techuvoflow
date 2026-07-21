@@ -1,53 +1,32 @@
-import {
-Navigate
-} from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../features/auth/context/AuthContext";
 
+export default function ProtectedRoute({ children }) {
+  const {
+    user,
+    loading,
+    hasActiveSubscription,
+  } = useAuth();
 
-import {
-useAuth
-} from "../../features/auth/context/AuthContext";
+  const location = useLocation();
 
+  if (loading) {
+    return (
+      <div className="p-10">
+        Loading...
+      </div>
+    );
+  }
 
+  if (!user) {
+    return <Navigate to="/signup" replace />;
+  }
 
-export default function ProtectedRoute({children}){
+  const isBillingPage = location.pathname === "/billing";
 
+  if (!hasActiveSubscription && !isBillingPage) {
+    return <Navigate to="/billing" replace />;
+  }
 
-const {
-user,
-loading
-}=useAuth();
-
-
-
-if(loading){
-
-return (
-
-<div className="p-10">
-
-Loading...
-
-</div>
-
-)
-
-}
-
-
-
-if(!user){
-
-return (
-
-<Navigate to="/signup"/>
-
-)
-
-}
-
-
-
-return children;
-
-
+  return children;
 }

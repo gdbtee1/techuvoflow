@@ -1,109 +1,99 @@
 import {
-createContext,
-useContext,
-useEffect,
-useState
+  createContext,
+  useContext,
+  useEffect,
+  useState,
 } from "react";
 
+import { supabase } from "../../../lib/supabase";
 
-import {supabase} from "../../../lib/supabase";
+const AuthContext = createContext();
 
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [subscription, setSubscription] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-const AuthContext=createContext();
+  async function loadSubscription(userId) {
+    const { data, error } = await supabase
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
 
+    if (error) {
+      console.error("Failed to load subscription:", error);
+      setSubscription(null);
+      return;
+    }
 
+    setSubscription(data);
+  }
 
-export function AuthProvider({children}){
+  useEffect(() => {
+    async function initializeAuth() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
+      const currentUser = session?.user ?? null;
 
-const [user,setUser]=useState(null);
+      setUser(currentUser);
 
-const [loading,setLoading]=useState(true);
+      if (currentUser) {
+        await loadSubscription(currentUser.id);
+      } else {
+        setSubscription(null);
+      }
 
+      setLoading(false);
+    }
 
+    initializeAuth();
 
-useEffect(()=>{
+    const {
+      data: { subscription: authSubscription },
+    } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        const currentUser = session?.user ?? null;
 
+        setUser(currentUser);
 
-supabase.auth.getSession()
+        if (currentUser) {
+          await loadSubscription(currentUser.id);
+        } else {
+          setSubscription(null);
+        }
 
-.then(({data})=>{
+        setLoading(false);
+      }
+    );
 
+    return () => {
+      authSubscription.unsubscribe();
+    };
+  }, []);
 
-setUser(
-data.session?.user ?? null
-);
+  const hasActiveSubscription =
+    subscription?.status === "active" ||
+    subscription?.status === "trialing";
 
-
-setLoading(false);
-
-
-});
-
-
-
-const {
-
-data:{
-subscription
-
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        subscription,
+        hasActiveSubscription,
+        refreshSubscription: () =>
+          user ? loadSubscription(user.id) : null,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
-}=supabase.auth.onAuthStateChange(
-
-(event,session)=>{
-
-
-setUser(
-session?.user ?? null
-);
-
-
-}
-
-
-
-);
-
-
-
-return ()=>{
-
-subscription.unsubscribe();
-
-}
-
-
-},[]);
-
-
-
-return (
-
-<AuthContext.Provider
-
-value={{
-
-user,
-
-loading
-
-}}
-
->
-
-{children}
-
-</AuthContext.Provider>
-
-)
-
-}
-
-
-
-export function useAuth(){
-
-return useContext(AuthContext);
-
+export function useAuth() {
+  return useContext(AuthContext);
 }
