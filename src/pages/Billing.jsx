@@ -1,12 +1,19 @@
 import { useState } from "react";
-import { Check, Sparkles, Zap, ShieldCheck, ArrowRight } from "lucide-react";
+import {
+  Check,
+  Sparkles,
+  Zap,
+  ShieldCheck,
+  ArrowRight,
+} from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 const plans = [
   {
     name: "Starter",
     price: "$4.99",
-    description: "Everything you need to organize leads and manage your pipeline.",
+    description:
+      "Everything you need to organize leads and manage your pipeline.",
     available: true,
     featured: true,
     badge: "Best for getting started",
@@ -21,7 +28,8 @@ const plans = [
   {
     name: "Growth",
     price: "$9.99",
-    description: "More automation and communication tools for growing teams.",
+    description:
+      "More automation and communication tools for growing teams.",
     available: false,
     features: [
       "Everything in Starter",
@@ -34,7 +42,8 @@ const plans = [
   {
     name: "Pro",
     price: "$19.99",
-    description: "Advanced tools for businesses ready to scale operations.",
+    description:
+      "Advanced tools for businesses ready to scale operations.",
     available: false,
     features: [
       "Everything in Growth",
@@ -55,29 +64,88 @@ export default function Billing() {
       setCheckoutLoading(true);
       setCheckoutError("");
 
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        throw new Error(
+          `Could not verify your login: ${sessionError.message}`,
+        );
+      }
+
+      if (!session) {
+        throw new Error(
+          "You must be logged in before starting checkout.",
+        );
+      }
+
+      console.log("Starting checkout for:", session.user.email);
+
       const { data, error } = await supabase.functions.invoke(
         "create-checkout-session",
         {
           body: {},
-        }
+        },
       );
 
       if (error) {
-        throw error;
+        let message = error.message;
+
+        try {
+          if (error.context) {
+            const response = error.context.clone();
+            const responseText = await response.text();
+
+            console.error(
+              "Checkout response status:",
+              error.context.status,
+            );
+
+            console.error(
+              "Checkout response body:",
+              responseText,
+            );
+
+            if (responseText) {
+              try {
+                const responseBody = JSON.parse(responseText);
+
+                if (responseBody?.error) {
+                  message = responseBody.error;
+                }
+              } catch {
+                message = responseText;
+              }
+            }
+          }
+        } catch (responseError) {
+          console.error(
+            "Could not read Edge Function response:",
+            responseError,
+          );
+        }
+
+        throw new Error(message);
       }
+
+      console.log("Checkout response data:", data);
 
       if (!data?.url) {
-        throw new Error("Stripe Checkout URL was not returned.");
+        throw new Error(
+          "Stripe Checkout URL was not returned.",
+        );
       }
 
-      window.location.href = data.url;
+      window.location.assign(data.url);
     } catch (error) {
       console.error("Checkout error:", error);
 
       setCheckoutError(
         error instanceof Error
           ? error.message
-          : "Unable to open checkout."
+          : "Unable to open checkout.",
       );
     } finally {
       setCheckoutLoading(false);
@@ -101,8 +169,9 @@ export default function Billing() {
           </h1>
 
           <p style={styles.subheading}>
-            Start with the essentials today. Upgrade as your business grows and
-            unlock more automation, team access, and AI-powered tools.
+            Start with the essentials today. Upgrade as your
+            business grows and unlock more automation, team
+            access, and AI-powered tools.
           </p>
 
           <div style={styles.trustRow}>
@@ -131,7 +200,9 @@ export default function Billing() {
               key={plan.name}
               style={{
                 ...styles.planCard,
-                ...(plan.featured ? styles.featuredCard : {}),
+                ...(plan.featured
+                  ? styles.featuredCard
+                  : {}),
               }}
             >
               {plan.badge && (
@@ -143,30 +214,48 @@ export default function Billing() {
 
               <div style={styles.planHeader}>
                 <div>
-                  <p style={styles.planName}>{plan.name}</p>
-                  <p style={styles.planDescription}>{plan.description}</p>
+                  <p style={styles.planName}>
+                    {plan.name}
+                  </p>
+
+                  <p style={styles.planDescription}>
+                    {plan.description}
+                  </p>
                 </div>
 
                 {!plan.available && (
-                  <span style={styles.comingSoon}>Coming soon</span>
+                  <span style={styles.comingSoon}>
+                    Coming soon
+                  </span>
                 )}
               </div>
 
               <div style={styles.priceRow}>
-                <span style={styles.price}>{plan.price}</span>
-                <span style={styles.interval}>/month</span>
+                <span style={styles.price}>
+                  {plan.price}
+                </span>
+
+                <span style={styles.interval}>
+                  /month
+                </span>
               </div>
 
               <div style={styles.divider} />
 
-              <p style={styles.includesText}>What&apos;s included</p>
+              <p style={styles.includesText}>
+                What&apos;s included
+              </p>
 
               <ul style={styles.featureList}>
                 {plan.features.map((feature) => (
-                  <li key={feature} style={styles.featureItem}>
+                  <li
+                    key={feature}
+                    style={styles.featureItem}
+                  >
                     <span style={styles.checkIcon}>
                       <Check size={15} />
                     </span>
+
                     {feature}
                   </li>
                 ))}
@@ -179,7 +268,9 @@ export default function Billing() {
                   disabled={checkoutLoading}
                   style={{
                     ...styles.primaryButton,
-                    ...(checkoutLoading ? styles.disabledButton : {}),
+                    ...(checkoutLoading
+                      ? styles.disabledButton
+                      : {}),
                   }}
                 >
                   {checkoutLoading ? (
@@ -192,7 +283,11 @@ export default function Billing() {
                   )}
                 </button>
               ) : (
-                <button type="button" disabled style={styles.secondaryButton}>
+                <button
+                  type="button"
+                  disabled
+                  style={styles.secondaryButton}
+                >
                   Coming soon
                 </button>
               )}
@@ -209,13 +304,19 @@ export default function Billing() {
 
         <section style={styles.bottomCard}>
           <div>
-            <p style={styles.bottomEyebrow}>Built for real businesses</p>
+            <p style={styles.bottomEyebrow}>
+              Built for real businesses
+            </p>
+
             <h2 style={styles.bottomHeading}>
-              Stop losing track of leads and opportunities.
+              Stop losing track of leads and
+              opportunities.
             </h2>
+
             <p style={styles.bottomText}>
-              Techuvo Flow gives you one clear place to manage your pipeline,
-              appointments, and business activity without unnecessary
+              Techuvo Flow gives you one clear place to
+              manage your pipeline, appointments, and
+              business activity without unnecessary
               complexity.
             </p>
           </div>
@@ -226,16 +327,20 @@ export default function Billing() {
             disabled={checkoutLoading}
             style={{
               ...styles.bottomButton,
-              ...(checkoutLoading ? styles.disabledButton : {}),
+              ...(checkoutLoading
+                ? styles.disabledButton
+                : {}),
             }}
           >
-            {checkoutLoading ? "Opening..." : "Get started for $4.99"}
+            {checkoutLoading
+              ? "Opening..."
+              : "Get started for $4.99"}
           </button>
         </section>
 
         <p style={styles.footerNote}>
-          Payments are processed securely through Stripe. Techuvo Flow does not
-          store your card information.
+          Payments are processed securely through Stripe.
+          Techuvo Flow does not store your card information.
         </p>
       </section>
     </main>
@@ -344,7 +449,8 @@ const styles = {
 
   planGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+    gridTemplateColumns:
+      "repeat(auto-fit, minmax(280px, 1fr))",
     gap: "22px",
     alignItems: "stretch",
   },
@@ -358,13 +464,15 @@ const styles = {
     background: "#ffffff",
     border: "1px solid #e5e7eb",
     borderRadius: "24px",
-    boxShadow: "0 16px 45px rgba(17, 24, 39, 0.09)",
+    boxShadow:
+      "0 16px 45px rgba(17, 24, 39, 0.09)",
   },
 
   featuredCard: {
     border: "2px solid #6366f1",
     transform: "translateY(-10px)",
-    boxShadow: "0 22px 55px rgba(79, 70, 229, 0.18)",
+    boxShadow:
+      "0 22px 55px rgba(79, 70, 229, 0.18)",
   },
 
   badge: {
@@ -380,7 +488,8 @@ const styles = {
     color: "#ffffff",
     fontSize: "12px",
     fontWeight: 800,
-    boxShadow: "0 8px 20px rgba(79, 70, 229, 0.3)",
+    boxShadow:
+      "0 8px 20px rgba(79, 70, 229, 0.3)",
   },
 
   planHeader: {
@@ -490,12 +599,14 @@ const styles = {
     padding: "14px 16px",
     border: 0,
     borderRadius: "13px",
-    background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+    background:
+      "linear-gradient(135deg, #4f46e5, #7c3aed)",
     color: "#ffffff",
     fontSize: "15px",
     fontWeight: 800,
     cursor: "pointer",
-    boxShadow: "0 12px 25px rgba(79, 70, 229, 0.25)",
+    boxShadow:
+      "0 12px 25px rgba(79, 70, 229, 0.25)",
   },
 
   secondaryButton: {
@@ -539,7 +650,8 @@ const styles = {
     borderRadius: "24px",
     background: "#111827",
     color: "#ffffff",
-    boxShadow: "0 20px 45px rgba(17, 24, 39, 0.16)",
+    boxShadow:
+      "0 20px 45px rgba(17, 24, 39, 0.16)",
   },
 
   bottomEyebrow: {

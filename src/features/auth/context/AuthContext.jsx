@@ -74,9 +74,16 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const hasActiveSubscription =
-    subscription?.status === "active" ||
-    subscription?.status === "trialing";
+ const FOUNDER_EMAILS = [
+  "techuvo.dev@gmail.com",
+];
+
+const isFounder = FOUNDER_EMAILS.includes(user?.email);
+
+const hasActiveSubscription =
+  isFounder ||
+  subscription?.status === "active" ||
+  subscription?.status === "trialing";
 
   return (
     <AuthContext.Provider
